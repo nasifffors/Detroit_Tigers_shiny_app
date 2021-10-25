@@ -3,7 +3,6 @@ x <- c("shiny","tidyr","dplyr")
 lapply(x, require, character.only = TRUE)
   
 # Load data
-setwd("~/ALFRE/MADE BY ALFREDO NASIFF FORS/R PROJECTS/Detroit Tigers Application")
 detroit_data <- read.csv("AnalyticsQuestionnairePitchData.csv")
 
 ui <- fluidPage(
