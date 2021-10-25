@@ -1,5 +1,5 @@
 # Load packages
-x <- c("shiny","tidyr","dplyr","ggplot2","sqldf")
+x <- c("shiny","tidyr","dplyr")
 lapply(x, require, character.only = TRUE)
   
 # Load data
@@ -13,36 +13,40 @@ ui <- fluidPage(
            wellPanel(
              selectInput(inputId = 'Pitcher_ID',
                          label = "Please select the ID of the pitcher",
-                         choices = unique(detroit_data$PitchId))
-           )),
+                         choices = unique(detroit_data$PitcherId),
+                         )
+           ), 
+           width = 5),
     column(2,
            wellPanel(
-            uiOutput("Pitch_Type")
-           )
-    )
-  ),
-  
+            uiOutput("Second_Selection"),
+           ),
+           width = 5,
+           offset = 1),
+    
   # Output()
   fluidRow(
     column(1,
            wellPanel(
              textOutput("value"),
-           ))
+           ),
+           width = 10),
+  ),
   ),
 )
 
-server <- function(input,output){
+server <- function(input,output, session){
   
-  output$Pitch_Type <- renderUI ({
+  output$Second_Selection <- renderUI(
     selectInput(
-      inputId = 'Pitch_Type',
-      label = "Please select the type of pitch",
-      choices = unique(detroit_data[detroit_data$PitchType == input$Pitcher_ID,
-                                    "PitchType"])
+      inputId = "Pitch_Type",
+      label = "Please enter the type of pitch",
+      choices = unique(detroit_data[detroit_data$PitcherId == input$Pitcher_ID,
+                       "PitchType"])
     )
-  })
+  )
   
-  output$value <- renderText({
+  output$value <- reactive({
     
     detroit_data_i <- detroit_data %>% 
       filter(PitcherId == input$Pitcher_ID & PitchType == input$Pitch_Type) %>% 
@@ -72,7 +76,7 @@ server <- function(input,output){
     
     paste("The pitcher", input$Pitcher_ID, "had a difference of",
           colnumber_maxim, "percent in", colname_maxim, "comparing the times
-          the throws of", input$Pitcher_Type, "were strike vs when was a ball,
+          the throws of", input$Pitch_Type, "were strike vs when was a ball,
           hit or foul")
   })
 
