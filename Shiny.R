@@ -1,7 +1,7 @@
 # Load packages
 x <- c("shiny","tidyr","dplyr")
 lapply(x, require, character.only = TRUE)
-  
+
 # Load data
 detroit_data <- read.csv("AnalyticsQuestionnairePitchData.csv")
 
@@ -13,24 +13,24 @@ ui <- fluidPage(
              selectInput(inputId = 'Pitcher_ID',
                          label = "Please select the ID of the pitcher",
                          choices = unique(detroit_data$PitcherId),
-                         )
+             )
            ), 
            width = 5),
     column(2,
            wellPanel(
-            uiOutput("Second_Selection"),
+             uiOutput("Second_Selection"),
            ),
            width = 5,
            offset = 1),
     
-  # Output()
-  fluidRow(
-    column(1,
-           wellPanel(
-             textOutput("value"),
-           ),
-           width = 10),
-  ),
+    # Output()
+    fluidRow(
+      column(1,
+             wellPanel(
+               textOutput("value"),
+             ),
+             width = 10),
+    ),
   ),
 )
 
@@ -41,23 +41,28 @@ server <- function(input,output, session){
       inputId = "Pitch_Type",
       label = "Please enter the type of pitch",
       choices = unique(detroit_data[detroit_data$PitcherId == input$Pitcher_ID,
-                       "PitchType"])
+                                    "PitchType"])
     )
   )
   
-  output$value <- reactive({
+  PId <- reactive(input$Pitcher_ID)
+  PType <- reactive(input$Pitch_Type)
+  
+  output$value <- renderText({
     
     # filter the data by pitcher Id and pitch type, then subset only the rows where
     # the pith call was strike, strikeout or swinging strike, then find the mean of
     # each of the variables in columns from 22 to 67.
     detroit_data_i <- detroit_data %>% 
-      filter(PitcherId == input$Pitcher_ID & PitchType == input$Pitch_Type) %>% 
+      filter(PitcherId == PId() & PitchType == PType()) %>% 
       subset(PitchCall %in% c("called_strike", "strikeout", "swinging_strike")) %>% 
       select(c(22:67)) %>% 
       summarise(across(everything(), mean))
     
+    # detroit_data_ii is equal to detroit_data_i but filtering in all throws
+    # except strike, strikeout or swinging_strike
     detroit_data_ii<- detroit_data %>% 
-      filter(PitcherId == input$Pitcher_ID & PitchType == input$Pitch_Type) %>% 
+      filter(PitcherId == PId() & PitchType == PType()) %>% 
       subset(!(PitchCall %in% c("called_strike", "strikeout", "swinging_strike"))) %>% 
       select(c(22:67)) %>% 
       summarise(across(everything(), mean))
@@ -84,12 +89,12 @@ server <- function(input,output, session){
     # find the column name of the maximum difference in percent
     colname_maxim <- colnames(detroit_data_ii[colnumber_maxim])
     
-    paste("The pitcher", input$Pitcher_ID, "had a difference of",
+    paste("The pitcher", PId(), "had a difference of",
           colnumber_maxim, "percent in", colname_maxim, "comparing the times
-          the throws of", input$Pitch_Type, "were strike vs when was a ball,
+          the throws of", PType(), "were strike vs when was a ball,
           hit or foul")
   })
-
+  
 }
 
 shinyApp(ui = ui, server = server)
